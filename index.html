@@ -93,7 +93,7 @@
     .view.active { display: flex; flex-direction: column; }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-    .intro { justify-content: space-between; padding: 6vh 0 12px; }
+    .intro { justify-content: space-between; padding: 1.5vh 0 12px; }
     .sky-orbit {
       width: min(76vw, 328px);
       aspect-ratio: 1;
@@ -131,7 +131,8 @@
 
     .eyebrow { color: var(--sky); font-size: .78rem; font-weight: 800; letter-spacing: .14em; margin: 0 0 12px; }
     h1, h2, p { margin-top: 0; }
-    h1 { font-size: clamp(2.25rem, 10vw, 3.35rem); line-height: 1.08; letter-spacing: -.055em; margin-bottom: 18px; }
+    h1 { font-size: clamp(1.5rem, 7vw, 2.65rem); line-height: 1.08; letter-spacing: -.045em; margin-bottom: 18px; }
+    .intro h1 { line-height: 1.18; white-space: nowrap; }
     h1 span { color: var(--sky-soft); }
     .intro-copy { max-width: 340px; color: var(--muted); font-size: 1rem; line-height: 1.7; margin-bottom: 28px; }
 
@@ -152,9 +153,19 @@
     .primary:active { transform: translateY(1px) scale(.99); }
 
     .quiz { padding: 26px 0 8px; }
-    .progress-label { display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; margin-bottom: 10px; }
+    .quiz-nav { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+    .back-button {
+      padding: 5px 0;
+      border: 0;
+      color: var(--muted);
+      background: transparent;
+      font-size: .82rem;
+      cursor: pointer;
+    }
+    .back-button:focus-visible { color: var(--white); outline: 2px solid var(--sky); outline-offset: 4px; border-radius: 4px; }
+    .progress-label { flex: 1; display: flex; justify-content: space-between; color: var(--muted); font-size: .82rem; }
     .progress-track { height: 5px; border-radius: 20px; background: rgba(255,255,255,.1); overflow: hidden; margin-bottom: 46px; }
-    .progress-fill { height: 100%; width: 20%; border-radius: inherit; background: linear-gradient(90deg, #62bdf5, #c7efff); transition: width .35s ease; }
+    .progress-fill { height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, #62bdf5, #c7efff); transition: width .35s ease; }
     .question-kicker { color: var(--sky); font-size: .82rem; font-weight: 750; margin-bottom: 11px; }
     .question-title { font-size: clamp(1.75rem, 7vw, 2.25rem); line-height: 1.25; letter-spacing: -.035em; margin-bottom: 30px; white-space: pre-line; }
     .answers { display: grid; gap: 11px; }
@@ -174,7 +185,11 @@
       cursor: pointer;
       transition: border-color .2s ease, transform .2s ease, background .2s ease;
     }
-    .answer:hover, .answer:focus-visible { border-color: rgba(139, 211, 255, .72); background: rgba(33, 79, 129, .82); transform: translateX(3px); outline: none; }
+    .answer:focus-visible { border-color: rgba(139, 211, 255, .72); background: rgba(33, 79, 129, .82); transform: translateX(3px); outline: none; }
+    .answer:active { transform: scale(.99); }
+    @media (hover: hover) and (pointer: fine) {
+      .answer:hover { border-color: rgba(139, 211, 255, .72); background: rgba(33, 79, 129, .82); transform: translateX(3px); }
+    }
     .answer span { font-size: 1rem; font-weight: 650; line-height: 1.45; }
     .answer b { color: var(--sky); font-size: 1.25rem; font-weight: 400; }
 
@@ -184,7 +199,7 @@
     .result-heading h2 { font-size: 1.65rem; letter-spacing: -.04em; margin-bottom: 0; }
 
     .album-wrap {
-      width: min(68vw, 286px);
+      width: min(38vw, 160px);
       margin: 0 auto 27px;
       position: relative;
     }
@@ -259,6 +274,7 @@
     .ghost { width: 100%; padding: 14px; border: 0; color: var(--muted); background: transparent; cursor: pointer; }
 
     .footer-note { margin: 18px 0 0; text-align: center; color: rgba(194, 216, 237, .58); font-size: .73rem; }
+    .fan-note { margin: 8px auto 0; max-width: 390px; text-align: center; color: rgba(194, 216, 237, .46); font-size: .68rem; line-height: 1.5; }
 
     @media (min-width: 700px) {
       .shell {
@@ -291,16 +307,20 @@
           <div class="sky-orbit" aria-hidden="true"><i class="orbit-dot"></i></div>
           <p class="eyebrow">오늘을 위한 한 곡</p>
           <h1>오늘의 당신에게는,<br><span>어떤 소란이 필요할까요?</span></h1>
-          <p class="intro-copy">다섯 번의 선택으로 지금의 마음과 가장 가까운 소란의 노래를 찾아드려요.</p>
+          <p class="intro-copy">다섯 번의 선택으로 지금의 마음과 가장 가까운<br>소란의 노래를 찾아드려요.</p>
         </div>
         <div>
           <button class="primary" id="startButton" type="button">노래 찾으러 가기</button>
           <p class="footer-note">약 1분 · 곡 목록 자동 업데이트 · 답변은 저장되지 않아요</p>
+          <p class="fan-note">본 사이트는 밴드 소란을 좋아하는 팬이 만든 비공식·비영리 팬 프로젝트입니다.<br>소란 및 앨범·음원·영상 관련 권리는 각 권리자에게 있습니다.</p>
         </div>
       </section>
 
       <section class="view quiz" id="quiz" aria-live="polite">
-        <div class="progress-label"><span id="stepText">QUESTION 1</span><span id="countText">1 / 5</span></div>
+        <div class="quiz-nav">
+          <button class="back-button" id="backButton" type="button" aria-label="이전 화면으로 돌아가기">← 이전</button>
+          <div class="progress-label"><span id="stepText">QUESTION 1</span><span id="countText">1 / 5</span></div>
+        </div>
         <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
         <p class="question-kicker" id="questionKicker"></p>
         <h2 class="question-title" id="questionTitle"></h2>
@@ -365,7 +385,7 @@
           { label: '내 마음을 알아줬으면 해요', role: ['공감'] },
           { label: '조용히 다독여줬으면 해요', role: ['안정'] },
           { label: '기분을 시원하게 바꿔줬으면 해요', role: ['전환'], exclusionContext: ['기분 전환'] },
-          { label: '이 좋은 기분을 오래 이어주면 좋겠어요', role: ['유지'] }
+          { label: '이 기분을 유지하고 싶어요', role: ['유지'] }
         ]
       },
       {
@@ -611,7 +631,7 @@
         : questions[state.step];
       $('stepText').textContent = `QUESTION ${state.step + 1}`;
       $('countText').textContent = `${state.step + 1} / ${questions.length}`;
-      $('progressFill').style.width = `${((state.step + 1) / questions.length) * 100}%`;
+      $('progressFill').style.width = `${(state.step / (questions.length - 1)) * 100}%`;
       $('questionKicker').textContent = q.kicker;
       $('questionTitle').textContent = q.title;
       $('answers').replaceChildren(...q.options.map((option, index) => {
@@ -669,6 +689,11 @@
       return (song.exclude || []).some(condition => activeConditions.has(condition));
     }
 
+    function matchesSelectedSound(song) {
+      const selectedSound = state.answers[4]?.sound || [];
+      return selectedSound.length === 0 || overlap(song.sound, selectedSound) > 0;
+    }
+
     function resultReason(song) {
       const role = state.answers[3]?.role?.[0];
       const lines = {
@@ -684,7 +709,9 @@
       const activeConditions = activeExclusionConditions();
       const eligibleSongs = songs.filter(song => !isExcluded(song, activeConditions));
       const candidateSongs = eligibleSongs.length >= 3 ? eligibleSongs : songs;
-      const ranked = candidateSongs.map(song => ({ ...song, score: scoreSong(song) })).sort((a, b) => b.score - a.score);
+      const ranked = candidateSongs
+        .map(song => ({ ...song, score: scoreSong(song), soundMatch: matchesSelectedSound(song) }))
+        .sort((a, b) => Number(b.soundMatch) - Number(a.soundMatch) || b.score - a.score);
       const winner = ranked[0];
       $('albumArt').src = artFor(winner);
       $('albumArt').alt = `소란 ${winner.album} 앨범 이미지`;
@@ -715,6 +742,19 @@
       renderQuestion();
       showView('quiz');
       track('quiz_start');
+    });
+
+    $('backButton').addEventListener('click', () => {
+      if (state.step === 0) {
+        state.answers = [];
+        showView('intro');
+        return;
+      }
+
+      state.answers = state.answers.slice(0, state.step);
+      state.step -= 1;
+      renderQuestion();
+      track('answer_back', { question: state.step + 1 });
     });
 
     $('retryButton').addEventListener('click', () => {
