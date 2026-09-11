@@ -227,7 +227,39 @@
     .song-meta { text-align: center; margin-bottom: 23px; }
     .album-name { color: var(--sky); font-size: .8rem; font-weight: 750; text-transform: uppercase; letter-spacing: .12em; margin-bottom: 8px; }
     .song-title { font-size: 2rem; line-height: 1.2; letter-spacing: -.045em; margin-bottom: 11px; }
-    .reason { color: var(--sky-soft); font-size: 1rem; font-weight: 650; line-height: 1.55; margin-bottom: 0; }
+    .reason {
+      max-width: 340px;
+      margin: 0 auto;
+      color: var(--sky-soft);
+      font-size: 1rem;
+      font-weight: 650;
+      line-height: 1.6;
+      text-wrap: balance;
+      word-break: keep-all;
+    }
+
+    .share-area { margin: 22px 0 18px; }
+    .share-title { margin-bottom: 11px; color: var(--muted); font-size: .82rem; text-align: center; }
+    .share-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .share-button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid rgba(179, 223, 255, .2);
+      border-radius: 15px;
+      color: var(--white);
+      background: rgba(18, 50, 89, .75);
+      font-size: .9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .share-button:active { transform: scale(.98); }
+    .share-button:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; }
+    .share-button svg { width: 18px; height: 18px; flex: none; }
+    .share-button[disabled] { cursor: wait; opacity: .65; }
+    .share-status { min-height: 1.4em; margin-top: 8px; color: var(--sky-soft); font-size: .75rem; text-align: center; }
 
     .story {
       padding: 19px 20px;
@@ -312,7 +344,7 @@
         <div>
           <button class="primary" id="startButton" type="button">노래 찾으러 가기</button>
           <p class="footer-note">약 1분 · 곡 목록 자동 업데이트 · 답변은 저장되지 않아요</p>
-          <p class="fan-note">본 사이트는 밴드 소란을 좋아하는 팬이 만든 비공식·비영리 팬 프로젝트입니다.<br>소란 및 앨범·음원·영상 관련 권리는 각 권리자에게 있습니다.</p>
+          <p class="fan-note">본 사이트는 밴드 소란을 좋아하는 팬이 만든 비공식·비영리 팬 프로젝트입니다.<br>소란 및 앨범·음원·영상 관련 권리는 각 권리자에게 있습니다.<br>기획·제작 © 2026 도리</p>
         </div>
       </section>
 
@@ -339,6 +371,20 @@
           <p class="album-name" id="albumName"></p>
           <h1 class="song-title" id="songTitle"></h1>
           <p class="reason" id="reason"></p>
+        </div>
+        <div class="share-area">
+          <p class="share-title">오늘의 소란을 함께 나눠보세요</p>
+          <div class="share-actions">
+            <button class="share-button" id="xShareButton" type="button" aria-label="X에 추천 결과 공유하기">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.24 2H21l-6.03 6.9L22.06 22H16.5l-4.35-5.69L7.17 22H4.4l6.46-7.38L4.06 2h5.7l3.93 5.2L18.24 2Zm-.97 17.7h1.53L8.93 4.18H7.29L17.27 19.7Z"/></svg>
+              X에 공유
+            </button>
+            <button class="share-button" id="instagramShareButton" type="button" aria-label="인스타그램 스토리용 결과 카드 공유하기">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor"/></svg>
+              인스타 스토리
+            </button>
+          </div>
+          <p class="share-status" id="shareStatus" role="status" aria-live="polite"></p>
         </div>
         <p class="story" id="story"></p>
         <p class="video-label">OFFICIAL YOUTUBE</p>
@@ -684,7 +730,7 @@
       return song.image || artByAlbum[song.album] || '';
     }
 
-    const state = { step: 0, answers: [] };
+    const state = { step: 0, answers: [], winner: null };
     const $ = (id) => document.getElementById(id);
 
     function showView(id) {
@@ -778,6 +824,118 @@
       return lines[role] || `${song.title}, 오늘의 마음과 가장 가까운 노래예요.`;
     }
 
+    function shareText(song) {
+      return `오늘의 나에게 필요한 소란은 〈${song.title}〉\n${resultReason(song)}\n\n#오늘의소란 #소란`;
+    }
+
+    function wrapCanvasText(ctx, text, maxWidth) {
+      const characters = [...text];
+      const lines = [];
+      let line = '';
+      characters.forEach(character => {
+        const next = line + character;
+        if (line && ctx.measureText(next).width > maxWidth) {
+          lines.push(line.trim());
+          line = character;
+        } else {
+          line = next;
+        }
+      });
+      if (line.trim()) lines.push(line.trim());
+      return lines;
+    }
+
+    function loadShareImage(url) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = url;
+      });
+    }
+
+    async function createStoryCard(song) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d');
+      const background = ctx.createLinearGradient(0, 0, 1080, 1920);
+      background.addColorStop(0, '#123b68');
+      background.addColorStop(.48, '#071d40');
+      background.addColorStop(1, '#020b1d');
+      ctx.fillStyle = background;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      const glow = ctx.createRadialGradient(540, 580, 50, 540, 580, 520);
+      glow.addColorStop(0, 'rgba(111, 205, 255, .34)');
+      glow.addColorStop(1, 'rgba(111, 205, 255, 0)');
+      ctx.fillStyle = glow;
+      ctx.fillRect(0, 0, 1080, 1180);
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#9bdcff';
+      ctx.font = '700 28px sans-serif';
+      ctx.fillText("TODAY'S SORAN", 540, 150);
+      ctx.fillStyle = '#f7fbff';
+      ctx.font = '700 48px sans-serif';
+      ctx.fillText('오늘의 당신에게는', 540, 240);
+
+      const artX = 180;
+      const artY = 340;
+      const artSize = 720;
+      try {
+        const image = await loadShareImage(artFor(song));
+        const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+        const sx = (image.naturalWidth - sourceSize) / 2;
+        const sy = (image.naturalHeight - sourceSize) / 2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.roundRect(artX, artY, artSize, artSize, 48);
+        ctx.clip();
+        ctx.drawImage(image, sx, sy, sourceSize, sourceSize, artX, artY, artSize, artSize);
+        ctx.restore();
+      } catch (_) {
+        ctx.fillStyle = '#173f6d';
+        ctx.beginPath();
+        ctx.roundRect(artX, artY, artSize, artSize, 48);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = '#9bdcff';
+      ctx.font = '700 25px sans-serif';
+      ctx.fillText(`SORAN · ${song.album}`, 540, 1165);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 66px sans-serif';
+      ctx.fillText(`〈${song.title}〉`, 540, 1265);
+      ctx.fillStyle = '#d6eafa';
+      ctx.font = '650 34px sans-serif';
+      const reasonLines = wrapCanvasText(ctx, resultReason(song), 820).slice(0, 3);
+      reasonLines.forEach((line, index) => ctx.fillText(line, 540, 1375 + index * 54));
+
+      ctx.strokeStyle = 'rgba(179, 223, 255, .24)';
+      ctx.beginPath();
+      ctx.moveTo(330, 1605);
+      ctx.lineTo(750, 1605);
+      ctx.stroke();
+      ctx.fillStyle = '#9fb9d1';
+      ctx.font = '500 27px sans-serif';
+      ctx.fillText('다섯 번의 선택으로 만나는 오늘의 노래', 540, 1680);
+      ctx.fillStyle = '#7f9bb8';
+      ctx.font = '500 23px sans-serif';
+      ctx.fillText('비공식·비영리 팬 프로젝트 · 기획·제작 도리', 540, 1760);
+
+      return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('카드 생성 실패')), 'image/png'));
+    }
+
+    function downloadStoryCard(blob, song) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `오늘의-소란-${song.title}.png`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    }
+
     function renderResult() {
       const activeConditions = activeExclusionConditions();
       const eligibleSongs = songs.filter(song => !isExcluded(song, activeConditions));
@@ -786,6 +944,7 @@
         .map(song => ({ ...song, score: scoreSong(song), soundMatch: matchesSelectedSound(song) }))
         .sort((a, b) => Number(b.soundMatch) - Number(a.soundMatch) || b.score - a.score);
       const winner = ranked[0];
+      state.winner = winner;
       $('albumArt').src = artFor(winner);
       $('albumArt').alt = `소란 ${winner.album} 앨범 이미지`;
       $('albumName').textContent = `SORAN · ${winner.album}`;
@@ -808,6 +967,38 @@
       showView('result');
       track('result_view', { songs: ranked.slice(0, 3).map(s => s.title) });
     }
+
+    $('xShareButton').addEventListener('click', () => {
+      if (!state.winner) return;
+      const url = new URL('https://twitter.com/intent/tweet');
+      url.searchParams.set('text', shareText(state.winner));
+      url.searchParams.set('url', window.location.href.split('#')[0]);
+      window.open(url, '_blank', 'noopener,noreferrer');
+      track('share_click', { channel: 'x', song: state.winner.title });
+    });
+
+    $('instagramShareButton').addEventListener('click', async () => {
+      if (!state.winner) return;
+      const button = $('instagramShareButton');
+      button.disabled = true;
+      $('shareStatus').textContent = '스토리 카드를 만들고 있어요…';
+      try {
+        const blob = await createStoryCard(state.winner);
+        const file = new File([blob], `오늘의-소란-${state.winner.title}.png`, { type: 'image/png' });
+        if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+          await navigator.share({ files: [file], title: '오늘의 소란', text: shareText(state.winner) });
+          $('shareStatus').textContent = '';
+        } else {
+          downloadStoryCard(blob, state.winner);
+          $('shareStatus').textContent = '카드를 저장했어요. 인스타그램 스토리에 올려주세요.';
+        }
+        track('share_click', { channel: 'instagram_story', song: state.winner.title });
+      } catch (error) {
+        if (error.name !== 'AbortError') $('shareStatus').textContent = '공유하지 못했어요. 잠시 후 다시 시도해주세요.';
+      } finally {
+        button.disabled = false;
+      }
+    });
 
     $('startButton').addEventListener('click', () => {
       state.step = 0;
